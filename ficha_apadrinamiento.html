@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ficha de Apadrinamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: linear-gradient(135deg, #e8f4fd, #eef0ff, #e8faf7);
+    --white: #ffffff;
+    --text: #333333;
+    --text-muted: #777;
+    --text-light: #aaa;
+    --border: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-xl: 28px;
+    --blue: #33A8DE;
+    --blue2: #506CFF;
+    --teal: #18AE97;
+    --teal2: #0BC3FF;
+    --orange: #FF751F;
+    --pink: #FF376F;
+    --grad-b: linear-gradient(135deg, #33A8DE, #506CFF);
+    --grad-c: linear-gradient(135deg, #18AE97, #0BC3FF);
+    --online: #18AE97;
+    --offline: #FF751F;
+  }
+
+  html, body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ──── TOPBAR ──── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .topbar-titles { flex: 1; min-width: 0; }
+  .topbar-titles h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-titles span {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+  .btn-sync {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--blue);
+    background: white;
+    color: var(--blue);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-sync:hover { background: var(--blue); color: white; }
+  .btn-sync.syncing { opacity: 0.7; pointer-events: none; }
+  .btn-sync svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .btn-sync.syncing svg { animation: spin 1s linear infinite; }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--online);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.offline { background: var(--offline); }
+
+  .btn-add {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: var(--grad-b);
+    color: white;
+    font-size: 24px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 12px rgba(80,108,255,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-add:hover { transform: scale(1.07); box-shadow: 0 5px 18px rgba(80,108,255,0.45); }
+  .btn-add:active { transform: scale(0.95); }
+
+  /* ──── OFFLINE BANNER ──── */
+  .offline-banner {
+    display: none;
+    background: linear-gradient(135deg, #FF751F, #FF376F);
+    color: white;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+  }
+  .offline-banner.show { display: block; }
+
+  /* ──── QUEUE BADGE ──── */
+  .queue-badge {
+    display: none;
+    background: var(--orange);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 2px 7px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .queue-badge.show { display: inline-block; }
+
+  /* ──── MAIN CONTENT ──── */
+  .main { padding: 20px 16px 100px; max-width: 640px; margin: 0 auto; }
+
+  /* ──── LISTA ──── */
+  .list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .list-header h2 { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+  .list-count {
+    background: var(--grad-c);
+    color: white;
+    font-size: 12px; font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 10px;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 11px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: white;
+    margin-bottom: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--blue); }
+
+  .card-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .record-card {
+    background: white;
+    border-radius: var(--r-md);
+    border: 1.5px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .record-card:active { transform: scale(0.99); }
+
+  .record-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--grad-b);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .record-info { flex: 1; min-width: 0; }
+  .record-name {
+    font-size: 15px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .record-meta {
+    font-size: 12px; color: var(--text-muted);
+    margin-top: 2px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .record-badge {
+    display: inline-block;
+    background: #f0f9ff;
+    color: var(--blue);
+    border: 1px solid #bfe3f7;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+  }
+  .record-badge.pending {
+    background: #fff7ed;
+    color: var(--orange);
+    border-color: #fed7aa;
+  }
+
+  .record-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-icon {
+    width: 34px; height: 34px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border);
+    background: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .btn-icon.edit:hover { border-color: var(--blue); color: var(--blue); background: #f0f9ff; }
+  .btn-icon.del:hover { border-color: var(--pink); color: var(--pink); background: #fff0f4; }
+  .btn-icon svg { width: 16px; height: 16px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state svg { width: 52px; height: 52px; opacity: 0.3; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; font-weight: 500; }
+  .empty-state small { font-size: 13px; }
+
+  /* ──── MODAL OVERLAY ──── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(30,30,50,0.45);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .modal {
+    background: white;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    width: 100%;
+    max-width: 640px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+
+  .modal-handle {
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin: 12px auto 4px;
+    flex-shrink: 0;
+  }
+
+  .modal-header {
+    padding: 8px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-header h2 {
+    font-size: 18px; font-weight: 700;
+    background: var(--grad-b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .modal-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ──── FORM SECTIONS ──── */
+  .form-section {
+    margin-bottom: 28px;
+  }
+  .form-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid;
+    border-image: var(--grad-b) 1;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 7px;
+    line-height: 1.4;
+  }
+  .form-label .multiple-tag {
+    display: inline-block;
+    background: #f0f9ff;
+    color: var(--blue);
+    border: 1px solid #bfe3f7;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0;
+  }
+
+  .form-select, .form-input, .form-textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-select:focus, .form-input:focus, .form-textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(51,168,222,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .select-wrapper { position: relative; }
+  .select-wrapper::after {
+    content: '';
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-muted);
+    pointer-events: none;
+  }
+
+  /* ──── OPCIÓN MÚLTIPLE (checkboxes) ──── */
+  .multi-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    background: #fafbfc;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .multi-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .multi-option:hover { background: #f0f9ff; }
+  .multi-option input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--blue);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .multi-option label {
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    line-height: 1.4;
+  }
+
+  /* ──── SEMESTRE ──── */
+  .semestre-group { display: flex; gap: 10px; }
+  .semestre-btn {
+    flex: 1;
+    padding: 11px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    background: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .semestre-btn.active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: #f0f9ff;
+    font-weight: 600;
+  }
+
+  /* ──── MODAL FOOTER ──── */
+  .modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    background: white;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    background: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .btn-save {
+    flex: 2;
+    padding: 13px;
+    border: none;
+    border-radius: var(--r-sm);
+    background: var(--grad-b);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 3px 12px rgba(80,108,255,0.3);
+  }
+  .btn-save:hover { opacity: 0.92; }
+  .btn-save:active { transform: scale(0.98); }
+  .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ──── CONFIRM MODAL ──── */
+  .confirm-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(30,30,50,0.5);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirm-overlay.open { display: flex; animation: fadeIn 0.15s; }
+
+  .confirm-box {
+    background: white;
+    border-radius: var(--r-lg);
+    padding: 28px 24px 20px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .confirm-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #fff0f4;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .confirm-icon svg { width: 26px; height: 26px; color: var(--pink); }
+  .confirm-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-box p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .confirm-actions button {
+    flex: 1; padding: 12px;
+    border-radius: var(--r-sm);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-no {
+    border: 1.5px solid var(--border);
+    background: white; color: var(--text-muted);
+  }
+  .btn-no:hover { border-color: var(--text-muted); }
+  .btn-yes {
+    border: none;
+    background: linear-gradient(135deg, #FF751F, #FF376F);
+    color: white;
+  }
+  .btn-yes:hover { opacity: 0.9; }
+
+  /* ──── TOAST ──── */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e2230;
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--r-md);
+    font-size: 14px; font-weight: 500;
+    z-index: 400;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success::before { content: '✓'; color: #18AE97; font-weight: 700; }
+  .toast.error::before { content: '✗'; color: var(--pink); font-weight: 700; }
+  .toast.info::before { content: 'ℹ'; color: var(--blue); font-weight: 700; }
+
+  /* ──── LOADING ──── */
+  .loading-state {
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 20px; gap: 12px; color: var(--text-muted);
+    font-size: 15px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @media (min-width: 480px) {
+    .topbar { padding: 16px 24px; }
+    .main { padding: 24px 24px 100px; }
+    .modal-body { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-titles">
+    <h1>Ficha de Apadrinamiento</h1>
+    <span>Programa JPL</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-sync" id="btnSync" onclick="syncNow()">
+      <div class="status-dot" id="statusDot"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+      </svg>
+      <span id="syncLabel">Sincronizar</span>
+      <span class="queue-badge" id="queueBadge">0</span>
+    </button>
+    <button class="btn-add" onclick="openForm()" aria-label="Nuevo registro">+</button>
+  </div>
+</header>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offlineBanner">
+  Sin conexión — los cambios se guardarán localmente
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="list-header">
+    <h2>Niños registrados</h2>
+    <span class="list-count" id="listCount">0</span>
+  </div>
+
+  <input type="search" class="search-box" placeholder="Buscar por nombre..." id="searchBox" oninput="filterList()" />
+
+  <div id="listContent">
+    <div class="loading-state"><div class="spinner"></div> Cargando registros...</div>
+  </div>
+</main>
+
+<!-- FORM MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="modalTitle">Nueva Ficha</h2>
+      <p id="modalSubtitle">Completa la información del niño/a</p>
+    </div>
+    <div class="modal-body">
+      <form id="fichaForm" onsubmit="return false;">
+
+        <!-- SECCIÓN 1: DATOS GENERALES -->
+        <div class="form-section">
+          <div class="form-section-title">Datos generales</div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre y apellido del niño/a *</label>
+            <input type="text" class="form-input" id="f_nombre" placeholder="Ej: María García" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Persona que responde *</label>
+            <input type="text" class="form-input" id="f_personaResponde" placeholder="Ej: Mamá, Papá, Abuela..." required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Semestre *</label>
+            <div class="semestre-group">
+              <button type="button" class="semestre-btn active" id="sem1" onclick="setSemestre('Primero')">Primero</button>
+              <button type="button" class="semestre-btn" id="sem2" onclick="setSemestre('Segundo')">Segundo</button>
+            </div>
+            <input type="hidden" id="f_semestre" value="Primero">
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: ALIMENTACIÓN -->
+        <div class="form-section">
+          <div class="form-section-title">Alimentación</div>
+
+          <div class="form-group">
+            <label class="form-label">
+              ¿Qué proteína come el niño/a todos los días?
+              <span class="multiple-tag">Opción múltiple</span>
+            </label>
+            <div class="multi-options" id="multi_proteina">
+              <!-- generado por JS -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Cuántas veces come el niño/a durante el día?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_frecuenciaComidas">
+                <option value="">— Selecciona —</option>
+                <option>3 veces</option>
+                <option>4 veces</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Cuando le da de comer, ¿usted…?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_observaComidas">
+                <option value="">— Selecciona —</option>
+                <option>Lo mira siempre/comen juntos</option>
+                <option>A veces lo miro</option>
+                <option>Casi nunca lo miro/ él come solo en su mesa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Se lavan las manos antes de darle de comer al niño/a?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_lavaManosComida">
+                <option value="">— Selecciona —</option>
+                <option>Si siempre</option>
+                <option>A veces</option>
+                <option>No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              ¿Qué es lo más difícil para usted al momento de alimentar al niño/a?
+              <span class="multiple-tag">Opción múltiple</span>
+            </label>
+            <div class="multi-options" id="multi_dificultadAlimentar">
+              <!-- generado por JS -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Qué le ayudaría más para alimentar mejor al niño/a?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_ayudaAlimentar">
+                <option value="">— Selecciona —</option>
+                <option>Mas información/recetas</option>
+                <option>Recibir alimentos</option>
+                <option>Tener más tiempo</option>
+                <option>Apoyo de la familia</option>
+                <option>Nada ya estoy bien</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿De dónde viene el agua que toma el niño/a?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_procedenciaAgua">
+                <option value="">— Selecciona —</option>
+                <option>Red pública tratada</option>
+                <option>Botellón</option>
+                <option>Agua entubada sin tratar</option>
+                <option>Pozo o rio</option>
+                <option>Lluvia</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: CUIDADO Y SALUD -->
+        <div class="form-section">
+          <div class="form-section-title">Cuidado y salud</div>
+
+          <div class="form-group">
+            <label class="form-label">¿Quién cuida al niño/a la mayor parte del tiempo?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_quienCuida">
+                <option value="">— Selecciona —</option>
+                <option>Mamá o papá</option>
+                <option>Abuela/o</option>
+                <option>Hermano/a mayor</option>
+                <option>Tía/o</option>
+                <option>Vecina o niñera</option>
+                <option>Otro cuidador</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Asiste a DCI o CNH?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_asisteDCI">
+                <option value="">— Selecciona —</option>
+                <option>Sí</option>
+                <option>No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vacunas completas</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_vacunas">
+                <option value="">— Selecciona —</option>
+                <option>Si todas</option>
+                <option>Faltan algunas</option>
+                <option>No sé</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Toma vitaminas/hierro que le entregan?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_vitaminasHierro">
+                <option value="">— Selecciona —</option>
+                <option>Si siempre</option>
+                <option>A veces</option>
+                <option>No</option>
+                <option>No le han dado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿Ha llevado al niño/a a controles en los últimos 6 meses?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_controlesUltimos6m">
+                <option value="">— Selecciona —</option>
+                <option>Sí</option>
+                <option>No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 4: SITUACIÓN FAMILIAR -->
+        <div class="form-section">
+          <div class="form-section-title">Situación familiar</div>
+
+          <div class="form-group">
+            <label class="form-label">
+              ¿Hubo alguna situación difícil este semestre?
+              <span class="multiple-tag">Opción múltiple</span>
+            </label>
+            <div class="multi-options" id="multi_situacionesDificiles">
+              <!-- generado por JS -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">¿De dónde viene el ingreso económico?</label>
+            <div class="select-wrapper">
+              <select class="form-select" id="f_ingresoEconomico">
+                <option value="">— Selecciona —</option>
+                <option>Trabajan 2 o + familiares en casa</option>
+                <option>Solo trabaja una persona en la familia (pero es trabajo seguro)</option>
+                <option>Solo trabaja una persona pero es trabajo ocasional o temporal.</option>
+                <option>No tienen trabajo y dependen del bono.</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Núcleo familiar
+              <span class="multiple-tag">Opción múltiple</span>
+            </label>
+            <div class="multi-options" id="multi_nucleoFamiliar">
+              <!-- generado por JS -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Observaciones adicionales</label>
+            <textarea class="form-textarea" id="f_observaciones" placeholder="Notas u observaciones relevantes..."></textarea>
+          </div>
+        </div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeForm()">Cancelar</button>
+      <button class="btn-save" id="btnSave" onclick="saveRecord()">Guardar ficha</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+    </div>
+    <h3>Eliminar registro</h3>
+    <p id="confirmMsg">¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.</p>
+    <div class="confirm-actions">
+      <button class="btn-no" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-yes" onclick="confirmDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+const API_URL = "https://script.google.com/macros/s/AKfycbyjwAc9yDTwLUWeXoS0Ol8AnFsK63rtZ2ts95BkuY7RuXYMHy-me6suY8pIb0yIQcThTg/exec";
+const CACHE_KEY = "rcr_fichas_cache";
+const QUEUE_KEY = "rcr_fichas_queue";
+
+// ══════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════
+let allRecords = [];
+let editingId = null;
+let deleteId = null;
+let isOnline = navigator.onLine;
+
+// ══════════════════════════════════════════════════════════════
+// OPCIONES MÚLTIPLES
+// ══════════════════════════════════════════════════════════════
+const MULTI_OPTIONS = {
+  proteina: ['Solo granos', 'Solo huevo', 'Atún', 'No sé bien que come'],
+  dificultadAlimentar: ['No tengo suficiente comida', 'No tengo tiempo', 'El niño no quiere comer', 'No sé que darle', 'No hay apoyo en casa', 'Ninguna dificultad'],
+  situacionesDificiles: ['Falto dinero para comida', 'Perdimos trabajo o ingreso', 'No tuvimos agua o luz', 'Desinterés o cansancio de participar', 'El niño/a estuvo enfermo/a', 'Peleas o problemas en casa', 'La mamá o cuidadora estuvo enferma', 'Alguien de la familia estuvo enfermo/a', 'Nos mudamos o cambiamos de casa', 'El niño/a dejó de asistir al programa', 'Ninguna situación difícil'],
+  nucleoFamiliar: ['Madre y padre viven juntos en casa', 'Madre y padre separados/divorciados pero se hace cargo de hijo.', 'Madre o padre separados/divorciados no se hace cargo de hijo económicamente.', 'Madre o padre con alguna adicción (tabaco, alcohol, otras drogas)', 'Padres están a cargo de hijo o familiar con discapacidad', 'Viuda/o']
+};
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildMultiOptions();
+  loadRecords();
+  updateOnlineStatus();
+  updateQueueBadge();
+});
+
+window.addEventListener('online', () => { isOnline = true; updateOnlineStatus(); syncNow(); });
+window.addEventListener('offline', () => { isOnline = false; updateOnlineStatus(); });
+
+// ══════════════════════════════════════════════════════════════
+// ONLINE STATUS
+// ══════════════════════════════════════════════════════════════
+function updateOnlineStatus() {
+  const dot = document.getElementById('statusDot');
+  const banner = document.getElementById('offlineBanner');
+  if (isOnline) {
+    dot.classList.remove('offline');
+    banner.classList.remove('show');
+  } else {
+    dot.classList.add('offline');
+    banner.classList.add('show');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// OFFLINE QUEUE
+// ══════════════════════════════════════════════════════════════
+function getQueue() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; }
+}
+
+function setQueue(q) {
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  updateQueueBadge();
+}
+
+function enqueue(action, data) {
+  const q = getQueue();
+  q.push({ action, data, ts: Date.now() });
+  setQueue(q);
+}
+
+function updateQueueBadge() {
+  const q = getQueue();
+  const badge = document.getElementById('queueBadge');
+  if (q.length > 0) {
+    badge.textContent = q.length;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════════
+async function apiCall(action, data = {}) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, data }),
+    headers: { 'Content-Type': 'text/plain' } // Apps Script necesita text/plain para evitar preflight CORS
+  });
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOAD RECORDS
+// ══════════════════════════════════════════════════════════════
+async function loadRecords() {
+  // Mostrar desde caché primero
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    try {
+      allRecords = JSON.parse(cached);
+      renderList();
+    } catch {}
+  }
+
+  if (!isOnline) return;
+
+  try {
+    const res = await apiCall('getRecords');
+    if (res.success) {
+      allRecords = res.records || [];
+      localStorage.setItem(CACHE_KEY, JSON.stringify(allRecords));
+      renderList();
+    }
+  } catch {
+    if (!cached) showToast('Sin conexión. Mostrando datos locales.', 'info');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER LIST
+// ══════════════════════════════════════════════════════════════
+function renderList(records = null) {
+  const list = records !== null ? records : allRecords;
+  const container = document.getElementById('listContent');
+  const countEl = document.getElementById('listCount');
+
+  countEl.textContent = list.length;
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <p>No hay registros aún</p>
+        <small>Toca el botón + para agregar el primer niño/a</small>
+      </div>`;
+    return;
+  }
+
+  const queue = getQueue();
+  const pendingIds = new Set(queue.map(q => q.data?.id_infante).filter(Boolean));
+
+  container.innerHTML = `<div class="card-list">${list.map(r => {
+    const id = r['ID_infante'] || r['id_infante'] || '';
+    const nombre = r['Nombre y apellido del niño/a'] || r['nombre'] || 'Sin nombre';
+    const semestre = r['Semestre'] || r['semestre'] || '';
+    const fecha = r['Fecha'] || r['fecha'] || '';
+    const isPending = pendingIds.has(id);
+    const initials = nombre.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase() || '?';
+
+    return `
+      <div class="record-card">
+        <div class="record-avatar">${initials}</div>
+        <div class="record-info">
+          <div class="record-name">${nombre}</div>
+          <div class="record-meta">
+            ${semestre ? `<span class="record-badge">${semestre}</span>` : ''}
+            ${isPending ? `<span class="record-badge pending">⏳ Pendiente</span>` : ''}
+            ${fecha ? `<span>${formatDate(fecha)}</span>` : ''}
+          </div>
+        </div>
+        <div class="record-actions">
+          <button class="btn-icon edit" onclick="editRecord('${id}')" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon del" onclick="askDelete('${id}', '${nombre.replace(/'/g, "\\'")}')" title="Eliminar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch { return dateStr; }
+}
+
+function filterList() {
+  const q = document.getElementById('searchBox').value.toLowerCase().trim();
+  if (!q) { renderList(); return; }
+  const filtered = allRecords.filter(r => {
+    const nombre = (r['Nombre y apellido del niño/a'] || r['nombre'] || '').toLowerCase();
+    return nombre.includes(q);
+  });
+  renderList(filtered);
+}
+
+// ══════════════════════════════════════════════════════════════
+// BUILD MULTI OPTIONS
+// ══════════════════════════════════════════════════════════════
+function buildMultiOptions() {
+  Object.entries(MULTI_OPTIONS).forEach(([key, options]) => {
+    const container = document.getElementById(`multi_${key}`);
+    if (!container) return;
+    container.innerHTML = options.map((opt, i) => `
+      <div class="multi-option">
+        <input type="checkbox" id="${key}_${i}" name="${key}" value="${opt}">
+        <label for="${key}_${i}">${opt}</label>
+      </div>
+    `).join('');
+  });
+}
+
+function getMultiValues(key) {
+  const checked = document.querySelectorAll(`#multi_${key} input[type="checkbox"]:checked`);
+  return Array.from(checked).map(c => c.value);
+}
+
+function setMultiValues(key, values) {
+  const vals = typeof values === 'string' ? values.split(', ').map(v => v.trim()) : (values || []);
+  const checkboxes = document.querySelectorAll(`#multi_${key} input[type="checkbox"]`);
+  checkboxes.forEach(cb => { cb.checked = vals.includes(cb.value); });
+}
+
+function clearMultiValues(key) {
+  document.querySelectorAll(`#multi_${key} input[type="checkbox"]`).forEach(cb => cb.checked = false);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SEMESTRE
+// ══════════════════════════════════════════════════════════════
+function setSemestre(val) {
+  document.getElementById('f_semestre').value = val;
+  document.getElementById('sem1').classList.toggle('active', val === 'Primero');
+  document.getElementById('sem2').classList.toggle('active', val === 'Segundo');
+}
+
+// ══════════════════════════════════════════════════════════════
+// FORM OPEN / CLOSE
+// ══════════════════════════════════════════════════════════════
+function openForm() {
+  editingId = null;
+  resetForm();
+  document.getElementById('modalTitle').textContent = 'Nueva Ficha';
+  document.getElementById('modalSubtitle').textContent = 'Completa la información del niño/a';
+  document.getElementById('btnSave').textContent = 'Guardar ficha';
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeForm() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeForm();
+}
+
+function resetForm() {
+  document.getElementById('f_nombre').value = '';
+  document.getElementById('f_personaResponde').value = '';
+  document.getElementById('f_semestre').value = 'Primero';
+  setSemestre('Primero');
+  ['f_frecuenciaComidas','f_observaComidas','f_lavaManosComida','f_ayudaAlimentar',
+   'f_procedenciaAgua','f_quienCuida','f_asisteDCI','f_vacunas','f_vitaminasHierro',
+   'f_controlesUltimos6m','f_ingresoEconomico'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f_observaciones').value = '';
+  Object.keys(MULTI_OPTIONS).forEach(clearMultiValues);
+  document.getElementById('fichaForm').scrollTop = 0;
+  document.querySelector('.modal-body').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════════════════════════
+// EDIT RECORD
+// ══════════════════════════════════════════════════════════════
+function editRecord(id) {
+  const record = allRecords.find(r => (r['ID_infante'] || r['id_infante'] || '') === id);
+  if (!record) return;
+
+  editingId = id;
+  resetForm();
+
+  // Llenar campos
+  document.getElementById('f_nombre').value = record['Nombre y apellido del niño/a'] || record['nombre'] || '';
+  document.getElementById('f_personaResponde').value = record['Persona que responde'] || record['personaResponde'] || '';
+  const sem = record['Semestre'] || record['semestre'] || 'Primero';
+  setSemestre(sem.includes('Segundo') ? 'Segundo' : 'Primero');
+
+  const selMap = {
+    'f_frecuenciaComidas': 'Frecuencia comidas',
+    'f_observaComidas': 'Cuando le da de comer, ¿usted….?',
+    'f_lavaManosComida': '¿Se lavan las manos antes de darle de comer al niño/a?',
+    'f_ayudaAlimentar': '¿Qué le ayudaría más para alimentar mejor al niño/a?',
+    'f_procedenciaAgua': '¿De dónde viene el agua que toma el niño/a?',
+    'f_quienCuida': '¿Quién cuida al niño/a la mayor parte del tiempo?',
+    'f_asisteDCI': '¿Asiste a DCI o CNH?',
+    'f_vacunas': 'Vacunas completas',
+    'f_vitaminasHierro': '¿Toma vitaminas/hierro que le entregan?',
+    'f_controlesUltimos6m': '¿Ha llevado al niño/a a controles de en los últimos 6 meses?',
+    'f_ingresoEconomico': '¿De dónde viene el ingreso económico?'
+  };
+
+  // Mapeo alternativo por key corto
+  const keyMap = {
+    'f_frecuenciaComidas': 'frecuenciaComidas',
+    'f_observaComidas': 'observaComidas',
+    'f_lavaManosComida': 'lavaManosComida',
+    'f_ayudaAlimentar': 'ayudaAlimentar',
+    'f_procedenciaAgua': 'procedenciaAgua',
+    'f_quienCuida': 'quienCuida',
+    'f_asisteDCI': 'asisteDCI',
+    'f_vacunas': 'vacunas',
+    'f_vitaminasHierro': 'vitaminasHierro',
+    'f_controlesUltimos6m': 'controlesUltimos6m',
+    'f_ingresoEconomico': 'ingresoEconomico'
+  };
+
+  Object.entries(selMap).forEach(([elId, col]) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = record[col] || record[keyMap[elId]] || '';
+  });
+
+  // Opción múltiple
+  setMultiValues('proteina', record['¿Qué proteína come el niño/a todos los días?'] || record['proteina'] || '');
+  setMultiValues('dificultadAlimentar', record['¿Qué es lo más difícil para usted al momento de alimentar al niño/a? '] || record['dificultadAlimentar'] || '');
+  setMultiValues('situacionesDificiles', record['¿Hubo alguna situación difícil este semestre? '] || record['situacionesDificiles'] || '');
+  setMultiValues('nucleoFamiliar', record['Núcleo familiar'] || record['nucleoFamiliar'] || '');
+
+  document.getElementById('f_observaciones').value = record['Observaciones adicionales'] || record['observaciones'] || '';
+
+  document.getElementById('modalTitle').textContent = 'Editar Ficha';
+  document.getElementById('modalSubtitle').textContent = record['Nombre y apellido del niño/a'] || 'Editar registro';
+  document.getElementById('btnSave').textContent = 'Actualizar ficha';
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVE RECORD
+// ══════════════════════════════════════════════════════════════
+async function saveRecord() {
+  const nombre = document.getElementById('f_nombre').value.trim();
+  const personaResponde = document.getElementById('f_personaResponde').value.trim();
+
+  if (!nombre) { showToast('El nombre del niño/a es obligatorio', 'error'); document.getElementById('f_nombre').focus(); return; }
+  if (!personaResponde) { showToast('Indica quién responde la ficha', 'error'); document.getElementById('f_personaResponde').focus(); return; }
+
+  const record = {
+    id_infante: editingId || '',
+    nombre,
+    personaResponde,
+    semestre: document.getElementById('f_semestre').value,
+    proteina: getMultiValues('proteina'),
+    frecuenciaComidas: document.getElementById('f_frecuenciaComidas').value,
+    observaComidas: document.getElementById('f_observaComidas').value,
+    lavaManosComida: document.getElementById('f_lavaManosComida').value,
+    dificultadAlimentar: getMultiValues('dificultadAlimentar'),
+    ayudaAlimentar: document.getElementById('f_ayudaAlimentar').value,
+    procedenciaAgua: document.getElementById('f_procedenciaAgua').value,
+    quienCuida: document.getElementById('f_quienCuida').value,
+    asisteDCI: document.getElementById('f_asisteDCI').value,
+    vacunas: document.getElementById('f_vacunas').value,
+    vitaminasHierro: document.getElementById('f_vitaminasHierro').value,
+    controlesUltimos6m: document.getElementById('f_controlesUltimos6m').value,
+    situacionesDificiles: getMultiValues('situacionesDificiles'),
+    ingresoEconomico: document.getElementById('f_ingresoEconomico').value,
+    nucleoFamiliar: getMultiValues('nucleoFamiliar'),
+    observaciones: document.getElementById('f_observaciones').value.trim()
+  };
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  if (isOnline) {
+    try {
+      const res = await apiCall('saveRecord', record);
+      if (res.success) {
+        if (!record.id_infante) record.id_infante = res.id_infante;
+        if (res.fecha) record.fecha = res.fecha;
+        updateLocalRecord(record);
+        closeForm();
+        showToast(editingId ? 'Ficha actualizada ✓' : 'Ficha guardada ✓', 'success');
+      } else {
+        throw new Error(res.error || 'Error desconocido');
+      }
+    } catch (err) {
+      // Si falla online, guardar en cola
+      if (!record.id_infante) record.id_infante = 'INF_' + Date.now();
+      enqueue('save', record);
+      updateLocalRecord(record);
+      closeForm();
+      showToast('Guardado localmente (sin conexión)', 'info');
+    }
+  } else {
+    if (!record.id_infante) record.id_infante = 'INF_' + Date.now();
+    enqueue('save', record);
+    updateLocalRecord(record);
+    closeForm();
+    showToast('Guardado localmente — se sincronizará pronto', 'info');
+  }
+
+  btn.disabled = false;
+  btn.textContent = editingId ? 'Actualizar ficha' : 'Guardar ficha';
+}
+
+function updateLocalRecord(record) {
+  const today = new Date().toISOString().split('T')[0];
+  const fullRecord = {
+    'ID_infante': record.id_infante,
+    'Nombre y apellido del niño/a': record.nombre,
+    'Fecha': record.fecha || today,
+    'Persona que responde': record.personaResponde,
+    'Semestre': record.semestre,
+    '¿Qué proteína come el niño/a todos los días?': Array.isArray(record.proteina) ? record.proteina.join(', ') : record.proteina,
+    'Frecuencia comidas': record.frecuenciaComidas,
+    'Cuando le da de comer, ¿usted….?': record.observaComidas,
+    '¿Se lavan las manos antes de darle de comer al niño/a?': record.lavaManosComida,
+    '¿Qué es lo más difícil para usted al momento de alimentar al niño/a? ': Array.isArray(record.dificultadAlimentar) ? record.dificultadAlimentar.join(', ') : record.dificultadAlimentar,
+    '¿Qué le ayudaría más para alimentar mejor al niño/a?': record.ayudaAlimentar,
+    '¿De dónde viene el agua que toma el niño/a?': record.procedenciaAgua,
+    '¿Quién cuida al niño/a la mayor parte del tiempo?': record.quienCuida,
+    '¿Asiste a DCI o CNH?': record.asisteDCI,
+    'Vacunas completas': record.vacunas,
+    '¿Toma vitaminas/hierro que le entregan?': record.vitaminasHierro,
+    '¿Ha llevado al niño/a a controles de en los últimos 6 meses?': record.controlesUltimos6m,
+    '¿Hubo alguna situación difícil este semestre? ': Array.isArray(record.situacionesDificiles) ? record.situacionesDificiles.join(', ') : record.situacionesDificiles,
+    '¿De dónde viene el ingreso económico?': record.ingresoEconomico,
+    'Núcleo familiar': Array.isArray(record.nucleoFamiliar) ? record.nucleoFamiliar.join(', ') : record.nucleoFamiliar,
+    'Observaciones adicionales': record.observaciones
+  };
+
+  const idx = allRecords.findIndex(r => (r['ID_infante'] || r['id_infante']) === record.id_infante);
+  if (idx >= 0) {
+    allRecords[idx] = fullRecord;
+  } else {
+    allRecords.unshift(fullRecord);
+  }
+
+  localStorage.setItem(CACHE_KEY, JSON.stringify(allRecords));
+  renderList();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════════════════════════
+function askDelete(id, nombre) {
+  deleteId = id;
+  document.getElementById('confirmMsg').textContent = `¿Estás seguro de que deseas eliminar el registro de "${nombre}"? Esta acción no se puede deshacer.`;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  deleteId = null;
+}
+
+async function confirmDelete() {
+  if (!deleteId) return;
+  const id = deleteId;
+  closeConfirm();
+
+  if (isOnline) {
+    try {
+      const res = await apiCall('deleteRecord', { id_infante: id });
+      if (res.success) {
+        removeLocalRecord(id);
+        showToast('Registro eliminado', 'success');
+      } else {
+        throw new Error(res.error);
+      }
+    } catch {
+      enqueue('delete', { id_infante: id });
+      removeLocalRecord(id);
+      showToast('Eliminado localmente — se sincronizará', 'info');
+    }
+  } else {
+    enqueue('delete', { id_infante: id });
+    removeLocalRecord(id);
+    showToast('Eliminado localmente — se sincronizará', 'info');
+  }
+}
+
+function removeLocalRecord(id) {
+  allRecords = allRecords.filter(r => (r['ID_infante'] || r['id_infante']) !== id);
+  localStorage.setItem(CACHE_KEY, JSON.stringify(allRecords));
+  renderList();
+}
+
+// ══════════════════════════════════════════════════════════════
+// SYNC
+// ══════════════════════════════════════════════════════════════
+async function syncNow() {
+  if (!isOnline) { showToast('Sin conexión a internet', 'error'); return; }
+
+  const btn = document.getElementById('btnSync');
+  const label = document.getElementById('syncLabel');
+  btn.classList.add('syncing');
+  label.textContent = 'Sincronizando...';
+
+  const queue = getQueue();
+
+  try {
+    if (queue.length > 0) {
+      const res = await apiCall('syncOfflineQueue', { queue });
+      if (res.success) {
+        setQueue([]); // Limpiar cola
+        showToast(`${res.synced} registro(s) sincronizado(s)`, 'success');
+      } else {
+        showToast('Error al sincronizar la cola', 'error');
+      }
+    }
+
+    // Recargar desde servidor
+    const res2 = await apiCall('getRecords');
+    if (res2.success) {
+      allRecords = res2.records || [];
+      localStorage.setItem(CACHE_KEY, JSON.stringify(allRecords));
+      renderList();
+      if (queue.length === 0) showToast('Datos actualizados', 'success');
+    }
+  } catch {
+    showToast('Error de conexión', 'error');
+  }
+
+  btn.classList.remove('syncing');
+  label.textContent = 'Sincronizar';
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
